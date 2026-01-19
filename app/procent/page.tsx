@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import type { LiveEvent } from "@/utils/liveTypes";
 import { useLiveSession } from "@/hooks/useLiveSession";
+import { sendLiveEvent } from "@/utils/liveRealtime";
 
 type Operation = "percent" | "permille" | "share" | "whole" | "mixed";
 type Range = "small" | "medium" | "large";
@@ -545,12 +546,7 @@ export default function ProcentPage() {
 
   function emitLiveEvent(event: LiveEvent) {
     if (!roomId) return;
-    fetch("/api/live", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ room: roomId, event }),
-      keepalive: true,
-    }).catch(() => {});
+    sendLiveEvent(roomId, event);
   }
 
   function emitCanvasStroke(

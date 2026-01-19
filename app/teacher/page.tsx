@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { LiveEvent } from "@/utils/liveTypes";
+import { sendLiveEvent, subscribeLiveEvents } from "@/utils/liveRealtime";
 import { supabase } from "@/utils/supabaseClient";
 
 type Status = "idle" | "connecting" | "open" | "error";
@@ -43,7 +44,7 @@ export default function TeacherPage() {
   const previewRefCallbacks = useRef<
     Map<string, (node: HTMLCanvasElement | null) => void>
   >(new Map());
-  const sourcesRef = useRef<Map<string, EventSource>>(new Map());
+  const subscriptionsRef = useRef<Map<string, () => void>>(new Map());
   const lastCanvasTsRef = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
@@ -71,96 +72,86 @@ export default function TeacherPage() {
 
   useEffect(() => {
     const nextIds = new Set(rooms.map((room) => room.id));
-    for (const [roomId, source] of sourcesRef.current.entries()) {
+    for (const [roomId, unsubscribe] of subscriptionsRef.current.entries()) {
       if (!nextIds.has(roomId)) {
-        source.close();
-        sourcesRef.current.delete(roomId);
+        unsubscribe();
+        subscriptionsRef.current.delete(roomId);
       }
     }
 
     for (const room of rooms) {
-      if (sourcesRef.current.has(room.id)) continue;
-      const source = new EventSource(
-        `/api/live?room=${encodeURIComponent(room.id)}`
-      );
-      sourcesRef.current.set(room.id, source);
-
+      if (subscriptionsRef.current.has(room.id)) continue;
       updateRoom(room.id, { status: "connecting" });
-
-      source.onopen = () => updateRoom(room.id, { status: "open" });
-      source.onerror = () => updateRoom(room.id, { status: "error" });
-      source.onmessage = (event) => {
-        try {
-          const payload = JSON.parse(event.data) as LiveEvent;
-          updateRoom(room.id, { lastEventAt: Date.now() });
-          if (payload.type === "input") {
-            updateRoom(room.id, {
-              answer: payload.value,
-              lastNonCanvasAt: Date.now(),
-            });
-            return;
-          }
-          if (payload.type === "task") {
-            updateRoom(room.id, {
-              equation: payload.equation,
-              operation: payload.operation,
-              lastNonCanvasAt: Date.now(),
-            });
-            return;
-          }
-          if (payload.type === "action") {
-            updateRoom(room.id, {
-              lastAction: payload.action,
-              lastActionAt: Date.now(),
-              lastNonCanvasAt: Date.now(),
-            });
-            return;
-          }
-          if (payload.type === "presence") {
-            const patch: Partial<RoomState> = {
-              lastPresenceAt: Date.now(),
-              presenceState: payload.state,
-            };
-            if (payload.track) patch.track = payload.track;
-            updateRoom(room.id, patch);
-            return;
-          }
-          if (payload.type === "result") {
-            updateRoom(room.id, {
-              attempts: payload.attempts,
-              correct: payload.correct,
-              streak: typeof payload.streak === "number" ? payload.streak : 0,
-              lastNonCanvasAt: Date.now(),
-            });
-            return;
-          }
-          if (payload.type === "canvas-clear") {
-            if (shouldApplyCanvasEvent(room.id, payload.ts)) {
-              clearPreviewCanvas(room.id);
-              if (room.id === activeRoomRef.current) clearCanvas();
-              setLastCanvasTs(room.id, payload.ts);
-            }
-            return;
-          }
-          if (payload.type === "canvas-snapshot") {
-            if (shouldApplyCanvasEvent(room.id, payload.ts)) {
-              drawPreviewSnapshot(room.id, payload.dataUrl);
-              if (room.id === activeRoomRef.current) drawSnapshot(payload.dataUrl);
-              setLastCanvasTs(room.id, payload.ts);
-            }
-            return;
-          }
-          if (payload.type === "canvas-stroke") {
-            if (shouldApplyCanvasEvent(room.id, payload.ts)) {
-              if (room.id === activeRoomRef.current)
-                drawStroke(payload.tool, payload.from, payload.to);
-              setLastCanvasTs(room.id, payload.ts);
-            }
-          }
-        } catch {
+      const unsubscribe = subscribeLiveEvents(room.id, (payload) => {
+        updateRoom(room.id, { lastEventAt: Date.now() });
+        if (payload.type === "input") {
+          updateRoom(room.id, {
+            answer: payload.value,
+            lastNonCanvasAt: Date.now(),
+          });
           return;
         }
-      };
+        if (payload.type === "task") {
+          updateRoom(room.id, {
+            equation: payload.equation,
+            operation: payload.operation,
+            lastNonCanvasAt: Date.now(),
+          });
+          return;
+        }
+        if (payload.type === "action") {
+          updateRoom(room.id, {
+            lastAction: payload.action,
+            lastActionAt: Date.now(),
+            lastNonCanvasAt: Date.now(),
+          });
+          return;
+        }
+        if (payload.type === "presence") {
+          const patch: Partial<RoomState> = {
+            lastPresenceAt: Date.now(),
+            presenceState: payload.state,
+          };
+          if (payload.track) patch.track = payload.track;
+          updateRoom(room.id, patch);
+          return;
+        }
+        if (payload.type === "result") {
+          updateRoom(room.id, {
+            attempts: payload.attempts,
+            correct: payload.correct,
+            streak: typeof payload.streak === "number" ? payload.streak : 0,
+            lastNonCanvasAt: Date.now(),
+          });
+          return;
+        }
+        if (payload.type === "canvas-clear") {
+          if (shouldApplyCanvasEvent(room.id, payload.ts)) {
+            clearPreviewCanvas(room.id);
+            if (room.id === activeRoomRef.current) clearCanvas();
+            setLastCanvasTs(room.id, payload.ts);
+          }
+          return;
+        }
+        if (payload.type === "canvas-snapshot") {
+          if (shouldApplyCanvasEvent(room.id, payload.ts)) {
+            drawPreviewSnapshot(room.id, payload.dataUrl);
+            if (room.id === activeRoomRef.current) drawSnapshot(payload.dataUrl);
+            setLastCanvasTs(room.id, payload.ts);
+          }
+          return;
+        }
+        if (payload.type === "canvas-stroke") {
+          if (shouldApplyCanvasEvent(room.id, payload.ts)) {
+            if (room.id === activeRoomRef.current) {
+              drawStroke(payload.tool, payload.from, payload.to);
+            }
+            setLastCanvasTs(room.id, payload.ts);
+          }
+        }
+      });
+      subscriptionsRef.current.set(room.id, unsubscribe);
+      updateRoom(room.id, { status: "open" });
     }
 
   }, [rooms, activeRoom]);
@@ -538,15 +529,7 @@ export default function TeacherPage() {
       setSessionError("Kunne ikke fjerne elev fra sessionen.");
       return;
     }
-    fetch("/api/live", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        room: roomId,
-        event: { type: "kick", ts: Date.now() },
-      }),
-      keepalive: true,
-    }).catch(() => {});
+    sendLiveEvent(roomId, { type: "kick", ts: Date.now() });
   }
 
   async function removeSessionCode(code: string) {

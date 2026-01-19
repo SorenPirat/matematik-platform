@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/utils/supabaseClient";
+import { sendLiveEvent, subscribeLiveEvents } from "@/utils/liveRealtime";
 
 const LS_GLOBAL_SESSION_CODE = "session_code_v1";
 const LS_GLOBAL_ALIAS = "session_alias_v1";
@@ -154,15 +155,12 @@ export function useLiveSession(config: LiveSessionConfig) {
   useEffect(() => {
     if (!roomId) return;
     const sendPresence = (state: "open" | "hidden" | "closed") => {
-      fetch("/api/live", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          room: roomId,
-          event: { type: "presence", state, track: trackLabel, ts: Date.now() },
-        }),
-        keepalive: true,
-      }).catch(() => {});
+      sendLiveEvent(roomId, {
+        type: "presence",
+        state,
+        track: trackLabel,
+        ts: Date.now(),
+      });
     };
 
     const onVisibility = () => {
@@ -187,22 +185,12 @@ export function useLiveSession(config: LiveSessionConfig) {
 
   useEffect(() => {
     if (!roomId) return;
-    const source = new EventSource(
-      `/api/live?room=${encodeURIComponent(roomId)}`
-    );
-    source.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data) as { type?: string };
-        if (payload.type === "kick") {
-          leaveSession("Du er blevet fjernet fra sessionen.");
-        }
-      } catch {
-        return;
+    const unsubscribe = subscribeLiveEvents(roomId, (payload) => {
+      if (payload.type === "kick") {
+        leaveSession("Du er blevet fjernet fra sessionen.");
       }
-    };
-    return () => {
-      source.close();
-    };
+    });
+    return () => unsubscribe();
   }, [roomId]);
 
   useEffect(() => {

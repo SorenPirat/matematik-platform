@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import VerticalLayout from "@/components/VerticalLayout";
 import type { LiveEvent } from "@/utils/liveTypes";
+import { sendLiveEvent } from "@/utils/liveRealtime";
 
 type Operation = "addition" | "subtraction" | "multiplication" | "division";
 
@@ -293,12 +294,7 @@ export default function TaskRenderer({
 
   function emitLiveEvent(event: LiveEvent) {
     if (!roomId) return;
-    fetch("/api/live", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ room: roomId, event }),
-      keepalive: true,
-    }).catch(() => {});
+    sendLiveEvent(roomId, event);
   }
 
   function emitCanvasStroke(
