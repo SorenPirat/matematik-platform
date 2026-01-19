@@ -49,19 +49,20 @@ export default function TeacherPage() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    function resizeCanvas() {
-      const parent = canvas.parentElement;
+    function resizeCanvas(target: HTMLCanvasElement) {
+      const parent = target.parentElement;
       if (!parent) return;
       const width = Math.max(320, Math.floor(parent.clientWidth));
       const height = 220;
-      canvas.width = width;
-      canvas.height = height;
+      target.width = width;
+      target.height = height;
       clearCanvas();
     }
 
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
-    return () => window.removeEventListener("resize", resizeCanvas);
+    const onResize = () => resizeCanvas(canvas);
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   useEffect(() => {
