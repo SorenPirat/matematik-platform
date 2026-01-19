@@ -361,11 +361,6 @@ export default function ProcentPage() {
         task.part
       )}`;
     }
-    if (task.operation === "whole") {
-      return `Hvor stort er hele beløbet, hvis ${task.rate}% er ${formatDisplay(
-        task.part
-      )}`;
-    }
     const symbol = task.operation === "percent" ? "%" : "‰";
     return `${task.rate}${symbol} af ${task.base}`;
   }, [task]);
