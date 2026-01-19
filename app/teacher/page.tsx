@@ -49,10 +49,9 @@ export default function TeacherPage() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const parent = canvas.parentElement;
-    if (!parent) return;
-
     function resizeCanvas() {
+      const parent = canvas.parentElement;
+      if (!parent) return;
       const width = Math.max(320, Math.floor(parent.clientWidth));
       const height = 220;
       canvas.width = width;
