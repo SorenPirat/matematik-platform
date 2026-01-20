@@ -9,13 +9,14 @@ import {
   DigitsSel,
   DecimalsSel,
   BorrowMode,
+  DivisionLevel,
 } from "@/utils/generateTask";
 import { useLiveSession } from "@/hooks/useLiveSession";
 
-type LayoutMode = "horizontal" | "vertical";
 type Task = {
   operation: Operation;
-  layout?: LayoutMode;
+  layout?: "horizontal" | "vertical";
+  divisionLevel?: DivisionLevel;
   problem: { operands: number[]; operator: string };
 };
 
@@ -25,7 +26,7 @@ type Settings = {
   digitsSel: DigitsSel;
   decimalsSel: DecimalsSel;
   borrowMode: BorrowMode;
-  layout: LayoutMode;
+  divisionLevel: DivisionLevel;
 };
 
 export default function PracticePage() {
@@ -37,7 +38,7 @@ export default function PracticePage() {
     digitsSel: 1,
     decimalsSel: 0,
     borrowMode: "mixed",
-    layout: "horizontal",
+    divisionLevel: 1,
   };
 
   const loadSettings = () => {
@@ -61,8 +62,8 @@ export default function PracticePage() {
       digitsSel: next.digitsSel,
       decimalsSel: next.decimalsSel,
       borrowMode: next.borrowMode,
+      divisionLevel: next.divisionLevel,
     }),
-    layout: next.layout,
   });
 
   const [settings, setSettings] = useState<Settings>(defaultSettings);
@@ -282,49 +283,74 @@ export default function PracticePage() {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                      {"Cifre f\u00f8r komma"}
-                    </label>
-                    <select
-                      className={selectClass}
-                      value={settings.digitsSel}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        updateSetting(
-                          "digitsSel",
-                          v === "mix" ? "mix" : (Number(v) as DigitsSel)
-                        );
-                      }}
-                    >
-                      <option value="1">1-cifret</option>
-                      <option value="2">2-cifret</option>
-                      <option value="3">3-cifret</option>
-                      <option value="mix">Blandet</option>
-                    </select>
-                  </div>
+                  {settings.operation === "division" ? (
+                    <div>
+                      <label className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                        Division level
+                      </label>
+                      <select
+                        className={selectClass}
+                        value={settings.divisionLevel}
+                        onChange={(e) =>
+                          updateSetting(
+                            "divisionLevel",
+                            Number(e.target.value) as DivisionLevel
+                          )
+                        }
+                      >
+                        <option value="1">Level 1</option>
+                        <option value="2">Level 2</option>
+                        <option value="3">Level 3</option>
+                        <option value="4">Level 4</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <>
+                      <div>
+                        <label className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                          {"Cifre f\u00f8r komma"}
+                        </label>
+                        <select
+                          className={selectClass}
+                          value={settings.digitsSel}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            updateSetting(
+                              "digitsSel",
+                              v === "mix" ? "mix" : (Number(v) as DigitsSel)
+                            );
+                          }}
+                        >
+                          <option value="1">1-cifret</option>
+                          <option value="2">2-cifret</option>
+                          <option value="3">3-cifret</option>
+                          <option value="mix">Blandet</option>
+                        </select>
+                      </div>
 
-                  <div>
-                    <label className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                      Decimaler
-                    </label>
-                    <select
-                      className={selectClass}
-                      value={settings.decimalsSel}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        updateSetting(
-                          "decimalsSel",
-                          v === "mix" ? "mix" : (Number(v) as DecimalsSel)
-                        );
-                      }}
-                    >
-                      <option value="0">0 decimaler</option>
-                      <option value="1">1 decimal</option>
-                      <option value="2">2 decimaler</option>
-                      <option value="mix">Blandet</option>
-                    </select>
-                  </div>
+                      <div>
+                        <label className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                          Decimaler
+                        </label>
+                        <select
+                          className={selectClass}
+                          value={settings.decimalsSel}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            updateSetting(
+                              "decimalsSel",
+                              v === "mix" ? "mix" : (Number(v) as DecimalsSel)
+                            );
+                          }}
+                        >
+                          <option value="0">0 decimaler</option>
+                          <option value="1">1 decimal</option>
+                          <option value="2">2 decimaler</option>
+                          <option value="mix">Blandet</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
 
                   {settings.operation === "subtraction" && (
                     <div>
@@ -348,21 +374,6 @@ export default function PracticePage() {
                     </div>
                   )}
 
-                  <div>
-                    <label className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                      Layout
-                    </label>
-                    <select
-                      className={selectClass}
-                      value={settings.layout}
-                      onChange={(e) =>
-                        updateSetting("layout", e.target.value as LayoutMode)
-                      }
-                    >
-                      <option value="horizontal">Horizontal</option>
-                      <option value="vertical">Vertical</option>
-                    </select>
-                  </div>
                 </div>
               ) : (
                 <div className="mt-6 rounded-2xl border border-dashed border-black/10 bg-white/70 px-4 py-4 text-sm text-slate-600">

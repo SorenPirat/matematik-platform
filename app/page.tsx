@@ -154,11 +154,11 @@ export default function Home() {
       <main className="relative min-h-screen overflow-hidden px-6 py-10 md:px-10">
         <div
           aria-hidden
-          className="pointer-events-none absolute -top-24 right-0 h-64 w-64 rounded-full bg-[var(--brand-2)]/20 blur-3xl float-slow"
+          className="pointer-events-none absolute -top-24 right-0 h-64 w-64 rounded-full bg-[var(--brand-2)]/20 blur-2xl"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute bottom-0 left-0 h-72 w-72 rounded-full bg-[var(--brand-1)]/20 blur-3xl float-slow"
+          className="pointer-events-none absolute bottom-0 left-0 h-72 w-72 rounded-full bg-[var(--brand-1)]/20 blur-2xl"
         />
 
         <div className="relative mx-auto flex max-w-3xl flex-col gap-8">
@@ -174,7 +174,7 @@ export default function Home() {
             </p>
           </header>
 
-          <section className="rounded-3xl border border-[var(--border)] bg-[var(--panel)]/90 p-6 shadow-[var(--shadow-1)] backdrop-blur">
+          <section className="rounded-3xl border border-[var(--border)] bg-[var(--panel)]/90 p-6 shadow-[var(--shadow-1)]">
             <div className="grid gap-5">
               <div>
                 <label className="text-xs uppercase tracking-[0.2em] text-slate-500">
@@ -227,11 +227,11 @@ export default function Home() {
     <main className="relative min-h-screen overflow-hidden px-6 py-10 md:px-10">
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-24 right-0 h-64 w-64 rounded-full bg-[var(--brand-2)]/20 blur-3xl float-slow"
+        className="pointer-events-none absolute -top-24 right-0 h-64 w-64 rounded-full bg-[var(--brand-2)]/20 blur-2xl"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute bottom-0 left-0 h-72 w-72 rounded-full bg-[var(--brand-1)]/20 blur-3xl float-slow"
+        className="pointer-events-none absolute bottom-0 left-0 h-72 w-72 rounded-full bg-[var(--brand-1)]/20 blur-2xl"
       />
 
       <div className="relative mx-auto flex max-w-6xl flex-col gap-10">
@@ -251,7 +251,7 @@ export default function Home() {
         <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {tracks.map((track) => {
             const card = (
-              <div className="relative h-full overflow-hidden rounded-3xl border border-black/10 bg-white/80 p-6 shadow-[var(--shadow-1)] backdrop-blur transition">
+              <div className="relative h-full overflow-hidden rounded-3xl border border-black/10 bg-white/80 p-6 shadow-[var(--shadow-1)] transition">
                 <div
                   aria-hidden
                   className={`absolute inset-0 bg-gradient-to-br ${track.accent}`}
@@ -288,9 +288,7 @@ export default function Home() {
                 href={track.href}
                 className="group focus:outline-none"
               >
-                <div className="transition group-hover:-translate-y-1 group-focus-visible:-translate-y-1">
-                  {card}
-                </div>
+                {card}
               </Link>
             ) : (
               <div key={track.title} className="opacity-90 grayscale-[0.15]">

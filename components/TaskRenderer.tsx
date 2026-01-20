@@ -11,6 +11,7 @@ type Operation = "addition" | "subtraction" | "multiplication" | "division";
 type Task = {
   operation: Operation;
   layout?: "horizontal" | "vertical";
+  divisionLevel?: 1 | 2 | 3 | 4;
   problem: {
     operands: number[];
     operator: string;
@@ -176,8 +177,10 @@ export default function TaskRenderer({
   const precision = useMemo(() => {
     const base = Math.max(...task.problem.operands.map(decimalsCount), 0);
     if (task.operation !== "division") return base;
-    return Math.min(base, 2);
-  }, [task.problem.operands, task.operation]);
+    const level = task.divisionLevel ?? 1;
+    if (level <= 2) return 0;
+    return 2;
+  }, [task.problem.operands, task.operation, task.divisionLevel]);
   const expected =
     task.operation === "division"
       ? truncTo(expectedRaw, precision)
@@ -525,9 +528,11 @@ export default function TaskRenderer({
               >
                 {operationLabel[task.operation]}
               </span>
-              <span className="text-sm text-slate-600">
-                Præcision: {precision} decimaler
-              </span>
+              {task.operation !== "division" && (
+                <span className="text-sm text-slate-600">
+                  Præcision: {precision} decimaler
+                </span>
+              )}
             </div>
           </div>
 
