@@ -36,6 +36,7 @@ const LS_STREAK = "regnehierarkiet_streak_v1";
 const LS_BEST_STREAK = "regnehierarkiet_best_streak_v1";
 const LS_SETTINGS = "regnehierarkiet_settings_v1";
 const AUTO_NEXT_MS = 1600;
+const MAX_ANSWER_LEN = 20;
 
 
 function randInt(min: number, max: number) {
@@ -878,11 +879,14 @@ export default function RegnehierarkietPage() {
                   </label>
                   <input
                     value={answer}
-                    onChange={(e) => setAnswer(e.target.value)}
+                    onChange={(e) =>
+                      setAnswer(e.target.value.slice(0, MAX_ANSWER_LEN))
+                    }
                     inputMode="decimal"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") checkAnswer();
                     }}
+                    maxLength={MAX_ANSWER_LEN}
                     disabled={revealed}
                     className="w-48 rounded-lg border border-black/10 bg-white/90 px-3 py-2 text-center text-lg font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-2)]"
                     placeholder="Skriv resultatet"

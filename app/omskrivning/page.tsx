@@ -27,6 +27,7 @@ const LS_STREAK = "omskrivning_streak_v1";
 const LS_BEST_STREAK = "omskrivning_best_streak_v1";
 const LS_SETTINGS = "omskrivning_settings_v1";
 const AUTO_NEXT_MS = 1600;
+const MAX_ANSWER_LEN = 20;
 
 const difficulties: Record<
   Difficulty,
@@ -826,11 +827,16 @@ export default function OmskrivningPage() {
                       </span>
                       <input
                         value={answerFraction}
-                        onChange={(e) => setAnswerFraction(e.target.value)}
+                        onChange={(e) =>
+                          setAnswerFraction(
+                            e.target.value.slice(0, MAX_ANSWER_LEN)
+                          )
+                        }
                         inputMode="text"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") checkAnswer();
                         }}
+                        maxLength={MAX_ANSWER_LEN}
                         disabled={revealed}
                         className="rounded-lg border border-black/10 bg-white/90 px-3 py-2 text-center text-lg font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-2)]"
                         placeholder="fx 1/2"
@@ -844,11 +850,16 @@ export default function OmskrivningPage() {
                       </span>
                       <input
                         value={answerDecimal}
-                        onChange={(e) => setAnswerDecimal(e.target.value)}
+                        onChange={(e) =>
+                          setAnswerDecimal(
+                            e.target.value.slice(0, MAX_ANSWER_LEN)
+                          )
+                        }
                         inputMode="decimal"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") checkAnswer();
                         }}
+                        maxLength={MAX_ANSWER_LEN}
                         disabled={revealed}
                         className="rounded-lg border border-black/10 bg-white/90 px-3 py-2 text-center text-lg font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-2)]"
                         placeholder="fx 0,5"
@@ -862,11 +873,16 @@ export default function OmskrivningPage() {
                       </span>
                       <input
                         value={answerPercent}
-                        onChange={(e) => setAnswerPercent(e.target.value)}
+                        onChange={(e) =>
+                          setAnswerPercent(
+                            e.target.value.slice(0, MAX_ANSWER_LEN)
+                          )
+                        }
                         inputMode="decimal"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") checkAnswer();
                         }}
+                        maxLength={MAX_ANSWER_LEN}
                         disabled={revealed}
                         className="rounded-lg border border-black/10 bg-white/90 px-3 py-2 text-center text-lg font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-2)]"
                         placeholder="fx 50%"

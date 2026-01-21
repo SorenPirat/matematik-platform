@@ -27,6 +27,7 @@ const LS_STREAK = "potenser_streak_v1";
 const LS_BEST_STREAK = "potenser_best_streak_v1";
 const LS_SETTINGS = "potenser_settings_v1";
 const AUTO_NEXT_MS = 1600;
+const MAX_ANSWER_LEN = 20;
 
 const ranges: Record<
   Range,
@@ -725,12 +726,15 @@ export default function PotenserPage() {
                     </label>
                     <input
                       value={answer}
-                      onChange={(e) => setAnswer(e.target.value)}
+                      onChange={(e) =>
+                        setAnswer(e.target.value.slice(0, MAX_ANSWER_LEN))
+                      }
                       inputMode="decimal"
                       onKeyDown={(e) => {
                         if (e.key === "Enter") checkAnswer();
                       }}
                       disabled={revealed}
+                      maxLength={MAX_ANSWER_LEN}
                       className="w-44 rounded-lg border border-black/10 bg-white/90 px-3 py-2 text-center text-lg font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-2)]"
                       placeholder="Skriv dit svar"
                     />

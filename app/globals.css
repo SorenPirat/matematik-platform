@@ -21,10 +21,7 @@
 }
 
 body {
-  background:
-    radial-gradient(1200px 700px at 10% -10%, #ffe8c7 0%, transparent 60%),
-    radial-gradient(900px 600px at 95% 0%, #d5efff 0%, transparent 55%),
-    linear-gradient(180deg, #f7f4ee 0%, #f2e6d6 100%);
+  background: linear-gradient(180deg, #f7f4ee 0%, #f2e6d6 100%);
   color: var(--foreground);
   font-family: var(--font-body), "Segoe UI", sans-serif;
   min-height: 100vh;
@@ -66,4 +63,27 @@ body {
 
 .rise-in-delay-2 {
   animation-delay: 240ms;
+}
+
+[class*="hover:-translate-y"]:hover,
+[class*="hover:translate-y"]:hover {
+  transform: none !important;
+  outline: 2px solid rgba(31, 26, 20, 0.18);
+  outline-offset: 2px;
+}
+
+[class*="hover:-translate-y"],
+[class*="hover:translate-y"] {
+  transition-property: background-color, border-color, color, opacity !important;
+}
+
+@media (prefers-reduced-motion: reduce), (update: slow) {
+  body {
+    background: var(--background);
+  }
+
+  .float-slow,
+  .rise-in {
+    animation: none;
+  }
 }

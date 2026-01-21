@@ -24,6 +24,7 @@ const LS_STREAK = "practice_streak_v1";
 const LS_BEST_STREAK = "practice_best_streak_v1";
 const LS_LEVEL = "practice_level_v1";
 const AUTO_NEXT_MS = 1600;
+const MAX_ANSWER_LEN = 20;
 
 // ---------- Helpers ----------
 function parseDa(input: string): number {
@@ -584,7 +585,8 @@ export default function TaskRenderer({
             placeholder="Skriv fx 53,2"
             value={answer}
             disabled={revealed}
-            onChange={(e) => setAnswer(e.target.value)}
+            maxLength={MAX_ANSWER_LEN}
+            onChange={(e) => setAnswer(e.target.value.slice(0, MAX_ANSWER_LEN))}
             onKeyDown={(e) => {
               if (e.key === "Enter") check();
               if (e.key.toLowerCase() === "n" && onRequestNewTask) {

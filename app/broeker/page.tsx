@@ -33,6 +33,7 @@ const LS_STREAK = "broeker_streak_v1";
 const LS_BEST_STREAK = "broeker_best_streak_v1";
 const LS_SETTINGS = "broeker_settings_v1";
 const AUTO_NEXT_MS = 1600;
+const MAX_ANSWER_LEN = 20;
 const operationLabels: Record<Operation, string> = {
   add: "Plus",
   subtract: "Minus",
@@ -798,11 +799,14 @@ export default function BroekerPage() {
                     <div className="flex flex-col items-center">
                       <input
                         value={answerNum}
-                        onChange={(e) => setAnswerNum(e.target.value)}
+                        onChange={(e) =>
+                          setAnswerNum(e.target.value.slice(0, MAX_ANSWER_LEN))
+                        }
                         inputMode="numeric"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") checkAnswer();
                         }}
+                        maxLength={MAX_ANSWER_LEN}
                         disabled={revealed}
                         className="w-20 rounded-lg border border-black/10 bg-white/90 px-3 py-2 text-center text-lg font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-2)]"
                         placeholder="tæller"
@@ -810,11 +814,14 @@ export default function BroekerPage() {
                       <span className="my-1 h-px w-16 bg-slate-900/70" />
                       <input
                         value={answerDen}
-                        onChange={(e) => setAnswerDen(e.target.value)}
+                        onChange={(e) =>
+                          setAnswerDen(e.target.value.slice(0, MAX_ANSWER_LEN))
+                        }
                         inputMode="numeric"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") checkAnswer();
                         }}
+                        maxLength={MAX_ANSWER_LEN}
                         disabled={revealed}
                         className="w-20 rounded-lg border border-black/10 bg-white/90 px-3 py-2 text-center text-lg font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-2)]"
                         placeholder="nævner"

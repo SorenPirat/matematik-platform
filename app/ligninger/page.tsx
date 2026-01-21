@@ -27,6 +27,7 @@ const LS_STREAK = "ligninger_streak_v1";
 const LS_BEST_STREAK = "ligninger_best_streak_v1";
 const LS_SETTINGS = "ligninger_settings_v1";
 const AUTO_NEXT_MS = 1600;
+const MAX_ANSWER_LEN = 20;
 
 const ranges: Record<
   Range,
@@ -767,11 +768,14 @@ export default function LigningerPage() {
                     </label>
                     <input
                       value={answer}
-                      onChange={(e) => setAnswer(e.target.value)}
+                      onChange={(e) =>
+                        setAnswer(e.target.value.slice(0, MAX_ANSWER_LEN))
+                      }
                       inputMode="numeric"
                       onKeyDown={(e) => {
                         if (e.key === "Enter") checkAnswer();
                       }}
+                      maxLength={MAX_ANSWER_LEN}
                       disabled={revealed}
                       className="w-44 rounded-lg border border-black/10 bg-white/90 px-3 py-2 text-center text-lg font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-2)]"
                       placeholder="x = ?"
