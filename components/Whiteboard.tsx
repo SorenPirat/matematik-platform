@@ -131,12 +131,21 @@ export default function Whiteboard({
     const onTouchMove = (event: TouchEvent) => {
       event.preventDefault();
     };
+    const onGestureStart = (event: Event) => {
+      event.preventDefault();
+    };
 
     node.addEventListener("wheel", onWheel, { passive: false });
     node.addEventListener("touchmove", onTouchMove, { passive: false });
+    node.addEventListener("gesturestart", onGestureStart as EventListener);
+    node.addEventListener("gesturechange", onGestureStart as EventListener);
+    node.addEventListener("gestureend", onGestureStart as EventListener);
     return () => {
       node.removeEventListener("wheel", onWheel);
       node.removeEventListener("touchmove", onTouchMove);
+      node.removeEventListener("gesturestart", onGestureStart as EventListener);
+      node.removeEventListener("gesturechange", onGestureStart as EventListener);
+      node.removeEventListener("gestureend", onGestureStart as EventListener);
     };
   }, [blockPageScroll]);
 
