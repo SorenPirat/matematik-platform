@@ -1,12 +1,12 @@
-﻿
+
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { PointerEvent as ReactPointerEvent } from "react";
 import type { LiveEvent } from "@/utils/liveTypes";
 import { useLiveSession } from "@/hooks/useLiveSession";
 import { sendLiveEvent } from "@/utils/liveRealtime";
+import Whiteboard from "@/components/Whiteboard";
 
 type Operation = "multiply" | "divide" | "mixed";
 type Range = "small" | "medium" | "large";
@@ -118,17 +118,17 @@ function formatDisplay(value: string) {
 
 function toSuperscript(value: number) {
   const map: Record<string, string> = {
-    "0": "⁰",
+    "0": "°",
     "1": "¹",
     "2": "²",
     "3": "³",
-    "4": "⁴",
-    "5": "⁵",
-    "6": "⁶",
-    "7": "⁷",
-    "8": "⁸",
-    "9": "⁹",
-    "-": "⁻",
+    "4": "4",
+    "5": "5",
+    "6": "6",
+    "7": "7",
+    "8": "8",
+    "9": "?",
+    "-": "?",
   };
   return String(value)
     .split("")
@@ -179,15 +179,7 @@ export default function PotenserPage() {
   const [revealed, setRevealed] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showCanvas, setShowCanvas] = useState(false);
-  const [tool, setTool] = useState<"pen" | "eraser" | "line">("pen");
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const drawingRef = useRef(false);
-  const lastPointRef = useRef<{ x: number; y: number } | null>(null);
-  const lineStartRef = useRef<{ x: number; y: number } | null>(null);
-  const undoStackRef = useRef<ImageData[]>([]);
   const autoNextRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const liveLastSentPointRef = useRef<{ x: number; y: number } | null>(null);
-  const liveLastSentAtRef = useRef(0);
   const inputDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const readNumber = (key: string, fallback: number) => {
     if (typeof window === "undefined") return fallback;
@@ -220,36 +212,6 @@ export default function PotenserPage() {
     router.replace("/");
   }, [identityChecked, isJoined, joining, hasGlobalIdentity, router]);
   useEffect(() => {
-    function resizeCanvas() {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const parent = canvas.parentElement;
-      if (!parent) return;
-      const width = Math.max(320, Math.floor(parent.clientWidth));
-      const height = 220;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-      canvas.width = width;
-      canvas.height = height;
-      clearCanvas();
-      undoStackRef.current = [];
-    }
-
-    if (showCanvas) {
-      resizeCanvas();
-      window.addEventListener("resize", resizeCanvas);
-      return () => window.removeEventListener("resize", resizeCanvas);
-    }
-  }, [showCanvas]);
-
-  useEffect(() => {
-    if (!showCanvas) return;
-    clearCanvas();
-    undoStackRef.current = [];
-    if (roomId) emitCanvasClear();
-  }, [task, showCanvas, roomId]);
-
-  useEffect(() => {
     if (!roomId) return;
     if (inputDebounceRef.current) clearTimeout(inputDebounceRef.current);
     inputDebounceRef.current = setTimeout(() => {
@@ -259,14 +221,6 @@ export default function PotenserPage() {
       if (inputDebounceRef.current) clearTimeout(inputDebounceRef.current);
     };
   }, [answer, roomId]);
-
-  useEffect(() => {
-    if (!roomId || !showCanvas) return;
-    const timer = setInterval(() => {
-      emitCanvasSnapshot();
-    }, 2000);
-    return () => clearInterval(timer);
-  }, [roomId, showCanvas]);
 
   useEffect(() => {
     return () => {
@@ -428,175 +382,9 @@ export default function PotenserPage() {
       ts: Date.now(),
     });
   }
-  function getCanvasPoint(
-    canvas: HTMLCanvasElement,
-    clientX: number,
-    clientY: number
-  ) {
-    const rect = canvas.getBoundingClientRect();
-    return { x: clientX - rect.left, y: clientY - rect.top };
-  }
-
-  function normalizePoint(
-    canvas: HTMLCanvasElement,
-    point: { x: number; y: number }
-  ) {
-    return { x: point.x / canvas.width, y: point.y / canvas.height };
-  }
-
-  function clearCanvas() {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.save();
-    ctx.globalCompositeOperation = "source-over";
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.restore();
-  }
-
-  function pushUndoSnapshot() {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const stack = undoStackRef.current;
-    stack.push(snapshot);
-    if (stack.length > 20) stack.shift();
-  }
-
-  function undo() {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const stack = undoStackRef.current;
-    const snapshot = stack.pop();
-    if (!snapshot) return;
-    ctx.putImageData(snapshot, 0, 0);
-    emitCanvasSnapshot();
-  }
-
-  function applyStrokeStyle(ctx: CanvasRenderingContext2D) {
-    ctx.strokeStyle = "#1f2937";
-    ctx.lineWidth = tool === "eraser" ? 18 : 3;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.globalCompositeOperation =
-      tool === "eraser" ? "destination-out" : "source-over";
-  }
-
   function emitLiveEvent(event: LiveEvent) {
     if (!roomId) return;
     sendLiveEvent(roomId, event);
-  }
-
-  function emitCanvasStroke(
-    toolMode: "pen" | "eraser",
-    from: { x: number; y: number },
-    to: { x: number; y: number }
-  ) {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    emitLiveEvent({
-      type: "canvas-stroke",
-      tool: toolMode,
-      from: normalizePoint(canvas, from),
-      to: normalizePoint(canvas, to),
-      ts: Date.now(),
-    });
-  }
-
-  function emitCanvasSnapshot() {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    emitLiveEvent({
-      type: "canvas-snapshot",
-      dataUrl: canvas.toDataURL("image/png"),
-      ts: Date.now(),
-    });
-  }
-
-  function emitCanvasClear() {
-    emitLiveEvent({ type: "canvas-clear", ts: Date.now() });
-  }
-
-  function handlePointerDown(event: ReactPointerEvent<HTMLCanvasElement>) {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    canvas.setPointerCapture(event.pointerId);
-    const point = getCanvasPoint(canvas, event.clientX, event.clientY);
-    pushUndoSnapshot();
-    liveLastSentPointRef.current = point;
-    liveLastSentAtRef.current = performance.now();
-    if (tool === "line") {
-      lineStartRef.current = point;
-      drawingRef.current = false;
-      return;
-    }
-    drawingRef.current = true;
-    lastPointRef.current = point;
-  }
-
-  function handlePointerMove(event: ReactPointerEvent<HTMLCanvasElement>) {
-    const canvas = canvasRef.current;
-    if (!canvas || !drawingRef.current || tool === "line") return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    applyStrokeStyle(ctx);
-    const next = getCanvasPoint(canvas, event.clientX, event.clientY);
-    const last = lastPointRef.current;
-    if (!last) {
-      lastPointRef.current = next;
-      return;
-    }
-    ctx.beginPath();
-    ctx.moveTo(last.x, last.y);
-    ctx.lineTo(next.x, next.y);
-    ctx.stroke();
-    lastPointRef.current = next;
-
-    const now = performance.now();
-    const lastSent = liveLastSentPointRef.current;
-    if (lastSent && now - liveLastSentAtRef.current >= 30) {
-      emitCanvasStroke(tool === "eraser" ? "eraser" : "pen", lastSent, next);
-      liveLastSentPointRef.current = next;
-      liveLastSentAtRef.current = now;
-    }
-  }
-
-  function handlePointerUp(event: ReactPointerEvent<HTMLCanvasElement>) {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    if (tool === "line" && lineStartRef.current) {
-      const end = getCanvasPoint(canvas, event.clientX, event.clientY);
-      const start = lineStartRef.current;
-      applyStrokeStyle(ctx);
-      ctx.beginPath();
-      ctx.moveTo(start.x, start.y);
-      ctx.lineTo(end.x, end.y);
-      ctx.stroke();
-      emitCanvasStroke("pen", start, end);
-    }
-
-    if (tool !== "line" && liveLastSentPointRef.current) {
-      const end = getCanvasPoint(canvas, event.clientX, event.clientY);
-      emitCanvasStroke(
-        tool === "eraser" ? "eraser" : "pen",
-        liveLastSentPointRef.current,
-        end
-      );
-    }
-
-    drawingRef.current = false;
-    lastPointRef.current = null;
-    lineStartRef.current = null;
-    liveLastSentPointRef.current = null;
-    canvas.releasePointerCapture(event.pointerId);
   }
 
   const level = Math.floor(streak / 5) + 1;
@@ -785,71 +573,14 @@ export default function PotenserPage() {
               </div>
             </div>
 
-            {showCanvas && (
-              <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--panel)]/90 p-6 shadow-[var(--shadow-1)] backdrop-blur">
-                <div className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                  Mellemregninger
-                </div>
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <button
-                    onClick={() => setTool("pen")}
-                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
-                      tool === "pen"
-                        ? "border-transparent bg-[var(--brand-2)] text-white"
-                        : "border-black/10 bg-white text-slate-700"
-                    }`}
-                  >
-                    Pen
-                  </button>
-                  <button
-                    onClick={() => setTool("eraser")}
-                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
-                      tool === "eraser"
-                        ? "border-transparent bg-[var(--brand-2)] text-white"
-                        : "border-black/10 bg-white text-slate-700"
-                    }`}
-                  >
-                    Viskelæder
-                  </button>
-                  <button
-                    onClick={() => setTool("line")}
-                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
-                      tool === "line"
-                        ? "border-transparent bg-[var(--brand-2)] text-white"
-                        : "border-black/10 bg-white text-slate-700"
-                    }`}
-                  >
-                    Streg
-                  </button>
-                  <button
-                    onClick={undo}
-                    className="rounded-full border border-black/10 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition"
-                  >
-                    Fortryd
-                  </button>
-                  <button
-                    onClick={() => {
-                      pushUndoSnapshot();
-                      clearCanvas();
-                      emitCanvasClear();
-                    }}
-                    className="rounded-full border border-black/10 bg-white px-3 py-1 text-xs font-semibold text-slate-700 transition"
-                  >
-                    Ryd fladen
-                  </button>
-                </div>
-                <div className="mt-3 overflow-hidden rounded-xl border border-black/10 bg-white/80">
-                  <canvas
-                    ref={canvasRef}
-                    className="block h-[220px] w-full touch-none"
-                    onPointerDown={handlePointerDown}
-                    onPointerMove={handlePointerMove}
-                    onPointerUp={handlePointerUp}
-                    onPointerLeave={handlePointerUp}
-                  />
-                </div>
-              </div>
-            )}
+            <Whiteboard
+              visible={showCanvas}
+              roomId={roomId}
+              resetKey={task}
+              enableWheelZoom
+              enablePinchZoom
+              showZoomButtons={false}
+            />
           </div>
           <div className="rise-in rise-in-delay-2">
             <div className="rounded-3xl border border-[var(--border)] bg-[var(--panel)]/90 p-6 shadow-[var(--shadow-1)] backdrop-blur">
@@ -914,8 +645,8 @@ export default function PotenserPage() {
                       }
                     >
                       <option value="small">Små tal (10¹-10³)</option>
-                      <option value="medium">Mellem tal (10¹-10⁶)</option>
-                      <option value="large">Store tal (10¹-10⁹)</option>
+                      <option value="medium">Mellem tal (10¹-10)</option>
+                      <option value="large">Store tal (10¹-10?)</option>
                     </select>
                   </div>
                 </div>
@@ -939,3 +670,5 @@ export default function PotenserPage() {
     </main>
   );
 }
+
+
