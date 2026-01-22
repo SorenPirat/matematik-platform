@@ -419,6 +419,7 @@ export default function TaskRenderer({
           enableWheelZoom
           enablePinchZoom
           showZoomButtons={false}
+          blockPageScroll
         />
 
         <div className="flex flex-wrap items-center justify-between gap-3">

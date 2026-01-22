@@ -122,30 +122,112 @@ export default function Whiteboard({
 
   useEffect(() => {
     if (!blockPageScroll) return;
-    const node = containerRef.current;
-    if (!node) return;
+    const container = containerRef.current;
+    const canvas = canvasRef.current;
+    if (!container) return;
 
     const onWheel = (event: WheelEvent) => {
       event.preventDefault();
+      event.stopPropagation();
     };
     const onTouchMove = (event: TouchEvent) => {
       event.preventDefault();
+      event.stopPropagation();
     };
     const onGestureStart = (event: Event) => {
       event.preventDefault();
+      event.stopPropagation();
     };
 
-    node.addEventListener("wheel", onWheel, { passive: false });
-    node.addEventListener("touchmove", onTouchMove, { passive: false });
-    node.addEventListener("gesturestart", onGestureStart as EventListener);
-    node.addEventListener("gesturechange", onGestureStart as EventListener);
-    node.addEventListener("gestureend", onGestureStart as EventListener);
+    container.addEventListener("wheel", onWheel, { passive: false });
+    container.addEventListener("touchmove", onTouchMove, { passive: false });
+    container.addEventListener("gesturestart", onGestureStart as EventListener);
+    container.addEventListener("gesturechange", onGestureStart as EventListener);
+    container.addEventListener("gestureend", onGestureStart as EventListener);
+
+    if (canvas) {
+      canvas.addEventListener("wheel", onWheel, { passive: false });
+      canvas.addEventListener("touchmove", onTouchMove, { passive: false });
+      canvas.addEventListener("gesturestart", onGestureStart as EventListener);
+      canvas.addEventListener("gesturechange", onGestureStart as EventListener);
+      canvas.addEventListener("gestureend", onGestureStart as EventListener);
+    }
+
+    const onWheelCapture = (event: WheelEvent) => {
+      if (!container.contains(event.target as Node)) return;
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    const win = window as unknown as {
+      __whiteboardScrollLockCount?: number;
+      __whiteboardScrollLockPrevOverflow?: string;
+    };
+
+    const lockScroll = () => {
+      win.__whiteboardScrollLockCount =
+        (win.__whiteboardScrollLockCount ?? 0) + 1;
+      if (win.__whiteboardScrollLockCount === 1) {
+        win.__whiteboardScrollLockPrevOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+      }
+    };
+
+    const unlockScroll = () => {
+      win.__whiteboardScrollLockCount = Math.max(
+        0,
+        (win.__whiteboardScrollLockCount ?? 1) - 1
+      );
+      if (win.__whiteboardScrollLockCount === 0) {
+        document.body.style.overflow =
+          win.__whiteboardScrollLockPrevOverflow ?? "";
+      }
+    };
+
+    const onPointerEnter = () => lockScroll();
+    const onPointerLeave = () => unlockScroll();
+
+    container.addEventListener("pointerenter", onPointerEnter);
+    container.addEventListener("pointerleave", onPointerLeave);
+
+    window.addEventListener("wheel", onWheelCapture, {
+      passive: false,
+      capture: true,
+    });
+    window.addEventListener("DOMMouseScroll", onWheelCapture, {
+      passive: false,
+      capture: true,
+    } as AddEventListenerOptions);
+    window.addEventListener("MozMousePixelScroll", onWheelCapture, {
+      passive: false,
+      capture: true,
+    } as AddEventListenerOptions);
+
     return () => {
-      node.removeEventListener("wheel", onWheel);
-      node.removeEventListener("touchmove", onTouchMove);
-      node.removeEventListener("gesturestart", onGestureStart as EventListener);
-      node.removeEventListener("gesturechange", onGestureStart as EventListener);
-      node.removeEventListener("gestureend", onGestureStart as EventListener);
+      container.removeEventListener("wheel", onWheel);
+      container.removeEventListener("touchmove", onTouchMove);
+      container.removeEventListener("gesturestart", onGestureStart as EventListener);
+      container.removeEventListener("gesturechange", onGestureStart as EventListener);
+      container.removeEventListener("gestureend", onGestureStart as EventListener);
+      if (canvas) {
+        canvas.removeEventListener("wheel", onWheel);
+        canvas.removeEventListener("touchmove", onTouchMove);
+        canvas.removeEventListener("gesturestart", onGestureStart as EventListener);
+        canvas.removeEventListener("gesturechange", onGestureStart as EventListener);
+        canvas.removeEventListener("gestureend", onGestureStart as EventListener);
+      }
+      container.removeEventListener("pointerenter", onPointerEnter);
+      container.removeEventListener("pointerleave", onPointerLeave);
+      unlockScroll();
+      window.removeEventListener("wheel", onWheelCapture, {
+        capture: true,
+      } as AddEventListenerOptions);
+      window.removeEventListener("DOMMouseScroll", onWheelCapture, {
+        capture: true,
+      } as AddEventListenerOptions);
+      window.removeEventListener("MozMousePixelScroll", onWheelCapture, {
+        capture: true,
+      } as AddEventListenerOptions);
     };
   }, [blockPageScroll]);
 
@@ -644,7 +726,7 @@ export default function Whiteboard({
         className="mt-3 overflow-hidden rounded-xl border border-black/10 bg-white/80"
         onWheel={handleWheel}
         ref={containerRef}
-        style={{ touchAction: "none" }}
+        style={{ touchAction: "none", overscrollBehavior: "contain" }}
       >
         <canvas
           ref={canvasRef}

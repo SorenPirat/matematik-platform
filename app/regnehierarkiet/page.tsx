@@ -731,6 +731,7 @@ export default function RegnehierarkietPage() {
               enableWheelZoom
               enablePinchZoom
               showZoomButtons={false}
+              blockPageScroll
             />
           </div>
 

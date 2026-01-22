@@ -661,6 +661,7 @@ export default function ProcentPage() {
               enableWheelZoom
               enablePinchZoom
               showZoomButtons={false}
+              blockPageScroll
             />
           </div>
           <div className="rise-in rise-in-delay-2">

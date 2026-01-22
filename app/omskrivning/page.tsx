@@ -729,6 +729,7 @@ export default function OmskrivningPage() {
               enableWheelZoom
               enablePinchZoom
               showZoomButtons={false}
+              blockPageScroll
             />
           </div>
 

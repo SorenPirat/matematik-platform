@@ -669,6 +669,7 @@ export default function BroekerPage() {
               enableWheelZoom
               enablePinchZoom
               showZoomButtons={false}
+              blockPageScroll
             />
           </div>
 
