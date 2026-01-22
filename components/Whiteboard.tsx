@@ -535,7 +535,10 @@ export default function Whiteboard({
   if (!visible) return null;
 
   return (
-    <div className="rounded-2xl border border-black/10 bg-white/90 p-4 shadow-sm">
+    <div
+      className="rounded-2xl border border-black/10 bg-white/90 p-4 shadow-sm"
+      style={{ touchAction: "none" }}
+    >
       <div className="text-xs uppercase tracking-[0.2em] text-slate-500">
         Mellemregninger
       </div>
@@ -632,6 +635,7 @@ export default function Whiteboard({
         className="mt-3 overflow-hidden rounded-xl border border-black/10 bg-white/80"
         onWheel={handleWheel}
         ref={containerRef}
+        style={{ touchAction: "none" }}
       >
         <canvas
           ref={canvasRef}
