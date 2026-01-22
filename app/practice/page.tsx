@@ -251,14 +251,22 @@ export default function PracticePage() {
                   </h2>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-[var(--panel-strong)] px-3 py-1 text-xs font-semibold text-slate-700">
-                    Banevalg
-                  </div>
                   <button
                     onClick={() => setShowSettings((prev) => !prev)}
-                    className="rounded-full border border-black/10 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm transition hover:translate-y-[-1px]"
+                    aria-label={
+                      showSettings ? "Skjul indstillinger" : "Vis indstillinger"
+                    }
+                    title={
+                      showSettings ? "Skjul indstillinger" : "Vis indstillinger"
+                    }
+                    className="flex items-center justify-center rounded-full border border-black/10 bg-white p-2 text-slate-700 shadow-sm transition"
                   >
-                    {showSettings ? "Skjul" : "Vis"}
+                    <img
+                      src="/gear.png"
+                      alt=""
+                      aria-hidden="true"
+                      className="h-4 w-4"
+                    />
                   </button>
                 </div>
               </div>
@@ -377,7 +385,7 @@ export default function PracticePage() {
                 </div>
               ) : (
                 <div className="mt-6 rounded-2xl border border-dashed border-black/10 bg-white/70 px-4 py-4 text-sm text-slate-600">
-                  {"Indstillingerne er skjult. Tryk \"Vis\" for at \u00e5bne dem igen."}
+                  {"Indstillingerne er skjult. Tryk p\u00e5 tandhjulet for at \u00e5bne dem igen."}
                 </div>
               )}
 
