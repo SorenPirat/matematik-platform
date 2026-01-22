@@ -16,6 +16,7 @@ type WhiteboardProps = {
   enableWheelZoom?: boolean;
   enablePinchZoom?: boolean;
   showZoomButtons?: boolean;
+  blockPageScroll?: boolean;
 };
 
 const MAX_ZOOM = 2;
@@ -30,9 +31,11 @@ export default function Whiteboard({
   enableWheelZoom = false,
   enablePinchZoom = false,
   showZoomButtons = true,
+  blockPageScroll = false,
 }: WhiteboardProps) {
   const [tool, setTool] = useState<"pen" | "eraser" | "line">("pen");
   const [canvasSize, setCanvasSize] = useState({ width: 0, height });
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const worldCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawingRef = useRef(false);
@@ -116,6 +119,26 @@ export default function Whiteboard({
     }, 2000);
     return () => clearInterval(timer);
   }, [roomId, visible]);
+
+  useEffect(() => {
+    if (!blockPageScroll) return;
+    const node = containerRef.current;
+    if (!node) return;
+
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+    };
+    const onTouchMove = (event: TouchEvent) => {
+      event.preventDefault();
+    };
+
+    node.addEventListener("wheel", onWheel, { passive: false });
+    node.addEventListener("touchmove", onTouchMove, { passive: false });
+    return () => {
+      node.removeEventListener("wheel", onWheel);
+      node.removeEventListener("touchmove", onTouchMove);
+    };
+  }, [blockPageScroll]);
 
   function ensureWorldCanvas() {
     if (worldCanvasRef.current) return;
@@ -496,8 +519,10 @@ export default function Whiteboard({
   }
 
   function handleWheel(event: ReactWheelEvent<HTMLDivElement>) {
+    if (blockPageScroll || enableWheelZoom) {
+      event.preventDefault();
+    }
     if (!enableWheelZoom) return;
-    event.preventDefault();
     const canvas = canvasRef.current;
     if (!canvas) return;
     const viewPoint = getViewPoint(canvas, event.clientX, event.clientY);
@@ -505,6 +530,7 @@ export default function Whiteboard({
     const next = zoomRef.current + (delta > 0 ? -0.1 : 0.1);
     zoomAtViewPoint(next, viewPoint);
   }
+
 
   if (!visible) return null;
 
@@ -605,6 +631,7 @@ export default function Whiteboard({
       <div
         className="mt-3 overflow-hidden rounded-xl border border-black/10 bg-white/80"
         onWheel={handleWheel}
+        ref={containerRef}
       >
         <canvas
           ref={canvasRef}
