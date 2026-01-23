@@ -203,7 +203,7 @@ export default function BroekerPage() {
     roomId,
   } = useLiveSession({
     storageKey: "broeker",
-    trackLabel: "BrÃ¸ker",
+    trackLabel: "Brøker",
     onInvalidSession: () => router.replace("/"),
   });
   const [settings, setSettings] = useState<Settings>(defaultSettings);
@@ -382,7 +382,7 @@ export default function BroekerPage() {
     if (revealed) {
       setFeedback({
         type: "info",
-        message: "Facit er vist. Lav en ny opgave for at fortsÃ¦tte.",
+        message: "Facit er vist. Lav en ny opgave for at fortsætte.",
       });
       emitLiveEvent({
         type: "result",
@@ -397,7 +397,7 @@ export default function BroekerPage() {
     if (!parsed) {
       setFeedback({
         type: "error",
-        message: "Skriv et gyldigt svar. NÃ¦vner mÃ¥ ikke vÃ¦re 0.",
+        message: "Skriv et gyldigt svar. Nævner må ikke være 0.",
       });
       return;
     }
@@ -428,7 +428,7 @@ export default function BroekerPage() {
     }
     setFeedback({
       type: "wrong",
-      message: "Ikke helt. PrÃ¸v igen.",
+      message: "Ikke helt. Prøv igen.",
     });
     setStreak(0);
     emitLiveEvent({
@@ -472,7 +472,7 @@ export default function BroekerPage() {
                 Forbinder
               </p>
               <h1 className="text-4xl font-[var(--font-display)] text-slate-900 md:text-5xl">
-                Klar om et Ã¸jeblik
+                Klar om et øjeblik
               </h1>
               <p className="max-w-2xl text-base text-slate-600">
                 Vi forbinder til din session.
@@ -511,14 +511,14 @@ export default function BroekerPage() {
         <header className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between rise-in">
           <div className="space-y-3">
             <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-              BrÃ¸ker
+              Brøker
             </p>
             <h1 className="text-4xl font-[var(--font-display)] text-slate-900 md:text-5xl">
-              BrÃ¸kvÃ¦rksted
+              Brøkværksted
             </h1>
             <p className="max-w-xl text-base text-slate-600">
-              TrÃ¦n brÃ¸kregning med plus, minus, gange og division. Skift mellem
-              brÃ¸ker og hele tal, og byg sikkerhed trin for trin.
+              Træn brøkregning med plus, minus, gange og division. Skift mellem
+              brøker og hele tal, og byg sikkerhed trin for trin.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -542,7 +542,7 @@ export default function BroekerPage() {
                     Opgave
                   </p>
                   <h2 className="text-2xl font-semibold text-slate-900">
-                    Regn brÃ¸ken
+                    Regn brøken
                   </h2>
                 </div>
                 <div className="min-w-[180px] rounded-2xl border border-[var(--border)] bg-[var(--panel)]/80 px-4 py-3 shadow-[var(--shadow-1)]">
@@ -559,7 +559,7 @@ export default function BroekerPage() {
                     />
                   </div>
                   <div className="mt-1 text-[11px] text-slate-500">
-                    {toNext} til nÃ¦ste level
+                    {toNext} til næste level
                   </div>
                 </div>
               </div>
@@ -597,7 +597,7 @@ export default function BroekerPage() {
                         maxLength={MAX_ANSWER_LEN}
                         disabled={revealed}
                         className="w-20 rounded-lg border border-black/10 bg-white/90 px-3 py-2 text-center text-lg font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-2)]"
-                        placeholder="tÃ¦ller"
+                        placeholder="tæller"
                       />
                       <span className="my-1 h-px w-16 bg-slate-900/70" />
                       <input
@@ -612,7 +612,7 @@ export default function BroekerPage() {
                         maxLength={MAX_ANSWER_LEN}
                         disabled={revealed}
                         className="w-20 rounded-lg border border-black/10 bg-white/90 px-3 py-2 text-center text-lg font-semibold shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-2)]"
-                        placeholder="nÃ¦vner"
+                        placeholder="nævner"
                       />
                     </div>
                   </div>
@@ -733,7 +733,7 @@ export default function BroekerPage() {
 
                     <div>
                       <label className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                        StÃ¸rrelse
+                        Sværhedsgrad
                       </label>
                       <select
                         className={selectClass}
@@ -742,9 +742,9 @@ export default function BroekerPage() {
                           updateSetting("range", e.target.value as Range)
                         }
                       >
-                        <option value="small">SmÃ¥ tal (1-5)</option>
-                        <option value="medium">Mellem tal (1-15)</option>
-                        <option value="large">Store tal (1-35)</option>
+                        <option value="small">Level 1</option>
+                        <option value="medium">Level 2</option>
+                        <option value="large">Level 3</option>
                       </select>
                     </div>
                   </div>
@@ -752,7 +752,7 @@ export default function BroekerPage() {
                 </>
               ) : (
                 <div className="mt-6 rounded-2xl border border-dashed border-black/10 bg-white/70 px-4 py-4 text-sm text-slate-600">
-                  Indstillingerne er skjult. Tryk pÃ¥ tandhjulet for at Ã¥bne dem
+                  Indstillingerne er skjult. Tryk på tandhjulet for at åbne dem
                   igen.
                 </div>
               )}

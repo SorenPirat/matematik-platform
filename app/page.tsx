@@ -67,7 +67,7 @@ const tracks: Track[] = [
   },
   {
     title: "Geometri",
-    description: "Areal, omkreds og vinkler i overskuelige trin.",
+    description: "Areal og omkreds i overskuelige trin.",
     tag: "Kommer snart",
     accent: "from-yellow-100/70 via-white to-orange-100/60",
   },

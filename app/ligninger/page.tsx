@@ -687,9 +687,9 @@ export default function LigningerPage() {
                         updateSetting("range", e.target.value as Range)
                       }
                     >
-                      <option value="small">Små tal</option>
-                      <option value="medium">Mellem tal</option>
-                      <option value="large">Store tal</option>
+                      <option value="small">Level 1</option>
+                      <option value="medium">Level 2</option>
+                      <option value="large">Level 3</option>
                     </select>
                   </div>
                 </div>

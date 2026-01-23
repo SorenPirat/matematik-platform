@@ -645,9 +645,9 @@ export default function PotenserPage() {
                         updateSetting("range", e.target.value as Range)
                       }
                     >
-                      <option value="small">Små tal (10¹-10³)</option>
-                      <option value="medium">Mellem tal (10¹-10)</option>
-                      <option value="large">Store tal (10¹-10?)</option>
+                      <option value="small">Level 1</option>
+                      <option value="medium">Level 2</option>
+                      <option value="large">Level 3</option>
                     </select>
                   </div>
                 </div>

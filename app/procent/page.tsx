@@ -82,6 +82,14 @@ function formatResult(value: number, decimals: number) {
   return fixed.replace(/0+$/, "").replace(/\.$/, "");
 }
 
+function formatTruncated(value: number, decimals: number) {
+  if (Number.isInteger(value)) return String(value);
+  const factor = 10 ** decimals;
+  const truncated = Math.trunc(value * factor) / factor;
+  const fixed = truncated.toFixed(decimals);
+  return fixed.replace(/0+$/, "").replace(/\.$/, "");
+}
+
 function buildTask(settings: Settings): Task {
   const op =
     settings.operation === "mixed"
@@ -359,6 +367,29 @@ export default function ProcentPage() {
     return normalizeNumberString(answer);
   }
 
+  function getAcceptedAnswers(task: Task) {
+    const answers: string[] = [];
+    if (task.operation === "whole") {
+      const normalized = normalizeNumberString(task.expected) ?? task.expected;
+      return [normalized];
+    }
+
+    const decimals = task.operation === "permille" ? 3 : 2;
+    let rawValue = 0;
+    if (task.operation === "share") {
+      rawValue = (Number(task.part) / task.base) * 100;
+    } else {
+      const divisor = task.operation === "percent" ? 100 : 1000;
+      rawValue = (task.base * task.rate) / divisor;
+    }
+
+    const rounded = normalizeNumberString(formatResult(rawValue, decimals));
+    if (rounded) answers.push(rounded);
+    const truncated = normalizeNumberString(formatTruncated(rawValue, decimals));
+    if (truncated && !answers.includes(truncated)) answers.push(truncated);
+    return answers;
+  }
+
   function checkAnswer() {
     emitLiveEvent({ type: "action", action: "check", ts: Date.now() });
     statsRef.current.attempts += 1;
@@ -384,8 +415,8 @@ export default function ProcentPage() {
       });
       return;
     }
-    const expected = normalizeNumberString(task.expected) ?? task.expected;
-    if (parsed === expected) {
+    const accepted = getAcceptedAnswers(task);
+    if (accepted.includes(parsed)) {
       setFeedback({ type: "correct", message: "Korrekt! Flot arbejde." });
       const nextStreak = streak + 1;
       setStreak(nextStreak);
@@ -561,15 +592,15 @@ export default function ProcentPage() {
                     </span>
                     {task.operation === "share" ? (
                       <>
-                        <span>{formatDisplay(task.part)}</span>
+                        <span>{formatDisplay(task.part)}kr.</span>
                         <span className="text-2xl text-slate-600">af</span>
-                        <span>{task.base}</span>
+                        <span>{task.base}kr.</span>
                       </>
                     ) : (
                       <>
                         <span>{task.rate}%</span>
                         <span className="text-2xl text-slate-600">er</span>
-                        <span>{formatDisplay(task.part)}</span>
+                        <span>{formatDisplay(task.part)}kr.</span>
                       </>
                     )}
                     <span className="text-3xl text-slate-600">=</span>
@@ -728,9 +759,9 @@ export default function ProcentPage() {
                         updateSetting("range", e.target.value as Range)
                       }
                     >
-                      <option value="small">Små tal</option>
-                      <option value="medium">Mellem tal</option>
-                      <option value="large">Store tal</option>
+                      <option value="small">Level 1</option>
+                      <option value="medium">Level 2</option>
+                      <option value="large">Level 3</option>
                     </select>
                   </div>
                 </div>

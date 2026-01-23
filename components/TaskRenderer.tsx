@@ -207,7 +207,7 @@ export default function TaskRenderer({
     statsRef.current.attempts += 1;
     if (revealed) {
       setFeedbackTone("info");
-      setFeedback("Facit er vist. Lav en ny opgave for at fortsÃ¦tte.");
+      setFeedback("Facit er vist. Lav en ny opgave for at fortsætte.");
       emitLiveEvent({
         type: "result",
         attempts: statsRef.current.attempts,
@@ -264,7 +264,7 @@ export default function TaskRenderer({
       }
 
       setRevealed(true);
-      showNudge("Klar! Ny opgave om et Ã¸jeblik.", "ok", AUTO_NEXT_MS);
+      showNudge("Klar! Ny opgave om et øjeblik.", "ok", AUTO_NEXT_MS);
 
       if (onRequestNewTask) {
         setTimeout(() => {
@@ -276,8 +276,8 @@ export default function TaskRenderer({
     }
 
     setFeedbackTone("warn");
-    setFeedback("Ikke helt. PrÃ¸v igen.");
-    showNudge("TÃ¦t pÃ¥ - PrÃ¸v igen!", "warn", 1200);
+    setFeedback("Ikke helt. Prøv igen.");
+    showNudge("Tæt på - Prøv igen!", "warn", 1200);
     setStreak(0);
     emitLiveEvent({
       type: "result",
@@ -296,7 +296,7 @@ export default function TaskRenderer({
     setRevealed(true);
     setFeedbackTone("info");
     setFeedback(
-      `Facit: ${fmtDa(expected, precision)}. Start en ny opgave for at fortsÃ¦tte.`
+      `Facit: ${fmtDa(expected, precision)}. Start en ny opgave for at fortsætte.`
     );
     showNudge("Facit vist - klar til ny opgave.", "info", 1400);
     setStreak(0);
@@ -312,9 +312,6 @@ export default function TaskRenderer({
       <div className="relative flex flex-col gap-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-              Aktiv mission
-            </p>
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <span
                 className={`rounded-full px-3 py-1 text-xs font-semibold ${operationBadge[task.operation]}`}
@@ -323,7 +320,7 @@ export default function TaskRenderer({
               </span>
               {task.operation !== "division" && (
                 <span className="text-sm text-slate-600">
-                  PrÃ¦cision: {precision} decimaler
+                  {precision} decimaler
                 </span>
               )}
             </div>
@@ -343,15 +340,12 @@ export default function TaskRenderer({
               />
             </div>
             <div className="mt-1 text-[11px] text-slate-500">
-              {toNext} til nÃ¦ste level
+              {toNext} til næste level
             </div>
           </div>
         </div>
 
         <div className="rounded-2xl border border-black/10 bg-white/90 p-6 shadow-sm">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-            LÃ¸s
-          </p>
           <div className="mt-4">
             {(task.layout ?? "horizontal") === "vertical" ? (
               <VerticalLayout
@@ -374,7 +368,7 @@ export default function TaskRenderer({
             type="text"
             inputMode="decimal"
             className="rounded-2xl border border-black/10 bg-white px-4 py-3 text-lg shadow-sm outline-none transition focus:ring-2 focus:ring-[var(--brand-2)] disabled:opacity-60"
-            placeholder="Skriv fx 53,2"
+            placeholder="Skriv fx 53"
             value={answer}
             disabled={revealed}
             maxLength={MAX_ANSWER_LEN}

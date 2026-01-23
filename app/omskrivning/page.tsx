@@ -46,7 +46,7 @@ const difficulties: Record<
   hard: {
     denominators: [8, 10, 16, 20, 32, 40, 50, 64, 100, 125, 200, 250, 500],
     numeratorMaxFactor: 3,
-    label: "SvÃ¦r",
+    label: "Svær",
   },
 };
 
@@ -303,7 +303,7 @@ export default function OmskrivningPage() {
   }, [task]);
 
   const givenLabel = useMemo(() => {
-    if (task.givenType === "fraction") return "BrÃ¸k";
+    if (task.givenType === "fraction") return "Brøk";
     if (task.givenType === "decimal") return "Decimaltal";
     return "Procent";
   }, [task.givenType]);
@@ -361,7 +361,7 @@ export default function OmskrivningPage() {
     if (revealed) {
       setFeedback({
         type: "info",
-        message: "Facit er vist. Lav en ny opgave for at fortsÃ¦tte.",
+        message: "Facit er vist. Lav en ny opgave for at fortsætte.",
       });
       emitLiveEvent({
         type: "result",
@@ -378,13 +378,13 @@ export default function OmskrivningPage() {
       if (!parsed) {
         setFeedback({
           type: "error",
-          message: "Skriv en gyldig brÃ¸k som fx 1/2.",
+          message: "Skriv en gyldig brøk som fx 1/2.",
         });
         return;
       }
       const expected = simplifyFraction(task.fraction);
       if (parsed.n !== expected.n || parsed.d !== expected.d) {
-        setFeedback({ type: "wrong", message: "Ikke helt. PrÃ¸v igen." });
+        setFeedback({ type: "wrong", message: "Ikke helt. Prøv igen." });
         setStreak(0);
         emitLiveEvent({
           type: "result",
@@ -408,7 +408,7 @@ export default function OmskrivningPage() {
         return;
       }
       if (parsed !== expected) {
-        setFeedback({ type: "wrong", message: "Ikke helt. PrÃ¸v igen." });
+        setFeedback({ type: "wrong", message: "Ikke helt. Prøv igen." });
         setStreak(0);
         emitLiveEvent({
           type: "result",
@@ -432,7 +432,7 @@ export default function OmskrivningPage() {
         return;
       }
       if (parsed !== expected) {
-        setFeedback({ type: "wrong", message: "Ikke helt. PrÃ¸v igen." });
+        setFeedback({ type: "wrong", message: "Ikke helt. Prøv igen." });
         setStreak(0);
         emitLiveEvent({
           type: "result",
@@ -507,7 +507,7 @@ export default function OmskrivningPage() {
                 Forbinder
               </p>
               <h1 className="text-4xl font-[var(--font-display)] text-slate-900 md:text-5xl">
-                Klar om et Ã¸jeblik
+                Klar om et øjeblik
               </h1>
               <p className="max-w-2xl text-base text-slate-600">
                 Vi forbinder til din session.
@@ -547,7 +547,7 @@ export default function OmskrivningPage() {
               Omskrivning
             </h1>
             <p className="max-w-xl text-base text-slate-600">
-              Omskriv mellem decimaltal, procent og brÃ¸ker i samme opgave.
+              Omskriv mellem decimaltal, procent og brøker i samme opgave.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -588,7 +588,7 @@ export default function OmskrivningPage() {
                     />
                   </div>
                   <div className="mt-1 text-[11px] text-slate-500">
-                    {toNext} til nÃ¦ste level
+                    {toNext} til næste level
                   </div>
                 </div>
               </div>
@@ -610,7 +610,7 @@ export default function OmskrivningPage() {
                   {task.givenType !== "fraction" && (
                     <label className="flex flex-col gap-2">
                       <span className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                        BrÃ¸k
+                        Brøk
                       </span>
                       <input
                         value={answerFraction}
@@ -769,7 +769,7 @@ export default function OmskrivningPage() {
                 <div className="mt-6 grid gap-5">
                   <div>
                     <label className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                      SvÃ¦rhedsgrad
+                      Sværhedsgrad
                     </label>
                     <select
                       className={selectClass}
@@ -781,15 +781,15 @@ export default function OmskrivningPage() {
                         )
                       }
                     >
-                      <option value="easy">Let</option>
-                      <option value="medium">Mellem</option>
-                      <option value="hard">SvÃ¦r</option>
+                      <option value="easy">Level 1</option>
+                      <option value="medium">Level 2</option>
+                      <option value="hard">Level 3</option>
                     </select>
                   </div>
                 </div>
               ) : (
                 <div className="mt-6 rounded-2xl border border-dashed border-black/10 bg-white/70 px-4 py-4 text-sm text-slate-600">
-                  Indstillingerne er skjult. Tryk pÃ¥ tandhjulet for at Ã¥bne dem
+                  Indstillingerne er skjult. Tryk på tandhjulet for at åbne dem
                   igen.
                 </div>
               )}

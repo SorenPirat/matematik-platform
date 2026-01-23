@@ -243,9 +243,6 @@ export default function PracticePage() {
             <div className="rounded-3xl border border-[var(--border)] bg-[var(--panel)]/90 p-6 shadow-[var(--shadow-1)] backdrop-blur">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.25em] text-slate-500">
-                    Missionskontrol
-                  </p>
                   <h2 className="text-2xl font-semibold text-slate-900">
                     Indstillinger
                   </h2>

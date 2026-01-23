@@ -7,7 +7,7 @@ import { useLiveSession } from "@/hooks/useLiveSession";
 import { sendLiveEvent } from "@/utils/liveRealtime";
 import Whiteboard from "@/components/Whiteboard";
 
-type Difficulty = "easy" | "medium" | "hard";
+type Level = 1 | 2 | 3 | 4 | 5;
 
 type OrderCategory = "parens" | "power" | "multiply" | "addsub";
 
@@ -29,7 +29,7 @@ type Task = {
 };
 
 type Settings = {
-  difficulty: Difficulty;
+  level: Level;
 };
 
 const LS_STREAK = "regnehierarkiet_streak_v1";
@@ -37,6 +37,12 @@ const LS_BEST_STREAK = "regnehierarkiet_best_streak_v1";
 const LS_SETTINGS = "regnehierarkiet_settings_v1";
 const AUTO_NEXT_MS = 1600;
 const MAX_ANSWER_LEN = 20;
+const ORDER_SEQUENCE: OrderCategory[] = [
+  "parens",
+  "power",
+  "multiply",
+  "addsub",
+];
 
 
 function randInt(min: number, max: number) {
@@ -103,7 +109,7 @@ function makeMultiplyTerm(min: number, max: number): Term {
     const a = b * c;
     return {
       id: "",
-      display: `${a} Ã· ${b}`,
+      display: `${a} ÷ ${b}`,
       value: c,
       category: "multiply",
     };
@@ -119,25 +125,37 @@ function makeMultiplyTerm(min: number, max: number): Term {
 }
 
 
-function makePowerTerm(min: number, max: number, allowRoot: boolean): Term {
-  const useRoot = allowRoot && Math.random() < 0.4;
-  if (useRoot) {
-    const base = randInt(min, max);
-    const value = base * base;
-    return {
-      id: "",
-      display: `\u221a${value}`,
-      value: base,
-      category: "power",
-    };
-  }
-  const base = randInt(min, max);
-  const exponent = Math.random() < 0.6 ? 2 : 3;
-  const superExp = exponent === 2 ? "\u00b2" : "\u00b3";
+function formatExponent(exp: number) {
+  if (exp === 1) return "\u00b9";
+  if (exp === 2) return "\u00b2";
+  if (exp === 3) return "\u00b3";
+  return `^${exp}`;
+}
+
+function makePowerTerm(
+  baseMin: number,
+  baseMax: number,
+  expMin: number,
+  expMax: number
+): Term {
+  const base = randInt(baseMin, baseMax);
+  const exponent = randInt(expMin, expMax);
+  const superExp = formatExponent(exponent);
   return {
     id: "",
     display: `${base}${superExp}`,
     value: base ** exponent,
+    category: "power",
+  };
+}
+
+function makeSqrtTerm(minResult: number, maxResult: number): Term {
+  const result = randInt(minResult, maxResult);
+  const value = result * result;
+  return {
+    id: "",
+    display: `\u221a${value}`,
+    value: result,
     category: "power",
   };
 }
@@ -175,47 +193,91 @@ function buildExpression(terms: Term[], label: string): Task {
   return { expression, result, label, terms: withIds, ops };
 }
 
-function buildEasy(): Task {
-  const terms = shuffle([
-    makeParenTerm(2, 9),
-    makePowerTerm(2, 8, false),
-    makeMultiplyTerm(2, 9),
-  ]);
-  return buildExpression(terms, "Let");
+function buildLevel1(): Task {
+  const count = randInt(2, 3);
+  const terms = shuffle(
+    Array.from({ length: count }, () => makeNumberTerm(1, 20))
+  );
+  return buildExpression(terms, "Level 1");
 }
 
-
-function buildMedium(): Task {
+function buildLevel2(): Task {
   const terms = shuffle([
-    makeParenTerm(2, 12),
-    makePowerTerm(2, 10, false),
-    makeMultiplyTerm(2, 12),
+    makeMultiplyTerm(2, 9),
+    makeNumberTerm(2, 15),
     makeNumberTerm(2, 15),
   ]);
-  return buildExpression(terms, "Mellem");
+  return buildExpression(terms, "Level 2");
 }
 
-
-function buildHard(): Task {
+function buildLevel3(): Task {
   const terms = shuffle([
-    makeParenTerm(3, 18),
-    makePowerTerm(2, 12, true),
+    makeParenTerm(2, 12),
+    makeMultiplyTerm(2, 12),
+    makeNumberTerm(2, 18),
+  ]);
+  return buildExpression(terms, "Level 3");
+}
+
+function buildLevel4(): Task {
+  const terms = shuffle([
+    makeParenTerm(2, 12),
+    makePowerTerm(1, 5, 1, 3),
     makeMultiplyTerm(3, 15),
     makeNumberTerm(3, 20),
-    makeNumberTerm(3, 20),
   ]);
-  return buildExpression(terms, "Sv?r");
+  return buildExpression(terms, "Level 4");
 }
 
+function buildLevel5(): Task {
+  const terms = shuffle([
+    makeParenTerm(2, 12),
+    makePowerTerm(1, 5, 1, 3),
+    makeSqrtTerm(1, 15),
+    makeMultiplyTerm(3, 15),
+    makeNumberTerm(3, 20),
+  ]);
+  return buildExpression(terms, "Level 5");
+}
 
 function buildTask(settings: Settings): Task {
-  if (settings.difficulty === "easy") return buildEasy();
-  if (settings.difficulty === "medium") return buildMedium();
-  return buildHard();
+  if (settings.level === 1) return buildLevel1();
+  if (settings.level === 2) return buildLevel2();
+  if (settings.level === 3) return buildLevel3();
+  if (settings.level === 4) return buildLevel4();
+  return buildLevel5();
 }
 
 export default function RegnehierarkietPage() {
-  const defaultSettings: Settings = { difficulty: "easy" };
+  const defaultSettings: Settings = { level: 1 };
+
+  const clampLevel = (value: number): Level => {
+    if (value <= 1) return 1;
+    if (value === 2) return 2;
+    if (value === 3) return 3;
+    if (value === 4) return 4;
+    return 5;
+  };
+
+  const normalizeSettings = (raw: unknown): Settings => {
+    if (!raw || typeof raw !== "object") return defaultSettings;
+    const record = raw as Record<string, unknown>;
+    const rawLevel = record.level;
+    if (typeof rawLevel === "number" && Number.isFinite(rawLevel)) {
+      return { level: clampLevel(Math.round(rawLevel)) };
+    }
+    if (typeof rawLevel === "string") {
+      const parsed = Number(rawLevel);
+      if (Number.isFinite(parsed)) {
+        return { level: clampLevel(Math.round(parsed)) };
+      }
+    }
+    const legacy = record.difficulty;
+    if (legacy === "easy") return { level: 2 };
+    if (legacy === "medium") return { level: 3 };
+    if (legacy === "hard") return { level: 4 };
+    return defaultSettings;
+  };
 
   const loadSettings = () => {
     if (typeof window === "undefined") return defaultSettings;
@@ -223,10 +285,7 @@ export default function RegnehierarkietPage() {
     if (!saved) return defaultSettings;
     try {
       const parsed = JSON.parse(saved);
-      return {
-        ...defaultSettings,
-        ...parsed,
-      };
+      return normalizeSettings(parsed);
     } catch {
       return defaultSettings;
     }
@@ -338,6 +397,31 @@ export default function RegnehierarkietPage() {
   }, [bestStreak]);
 
   const equationText = useMemo(() => `${task.expression} = ?`, [task.expression]);
+  const requiredOrder = useMemo(() => {
+    const present = new Set<OrderCategory>();
+    task.terms.forEach((term) => {
+      if (term.category === "parens") present.add("parens");
+      if (term.category === "power") present.add("power");
+      if (term.category === "multiply") present.add("multiply");
+    });
+    if (task.ops.length) present.add("addsub");
+    return ORDER_SEQUENCE.filter((category) => present.has(category));
+  }, [task.terms, task.ops]);
+  const orderHint = useMemo(() => {
+    const includeSqrt = task.terms.some((term) => term.display.includes("\u221a"));
+    return requiredOrder
+      .map((category, index) => {
+        if (category === "parens") return `()=${index + 1}`;
+        if (category === "power") {
+          return includeSqrt
+            ? `potenser/kvadratrod=${index + 1}`
+            : `potenser=${index + 1}`;
+        }
+        if (category === "multiply") return `x/\u00f7=${index + 1}`;
+        return `+ og -=${index + 1}`;
+      })
+      .join(", ");
+  }, [requiredOrder, task.terms]);
 
   const operationLabel = useMemo(
     () => `Regnehierarkiet (${task.label})`,
@@ -385,7 +469,7 @@ export default function RegnehierarkietPage() {
       setOrderSteps(orderSteps.filter((item) => item != category));
       return;
     }
-    if (orderSteps.length >= 4) return;
+    if (orderSteps.length >= requiredOrder.length) return;
     setOrderSteps([...orderSteps, category]);
   }
 
@@ -395,7 +479,7 @@ export default function RegnehierarkietPage() {
   }
 
   function isOrderCorrect() {
-    return orderSteps.join(",") === "parens,power,multiply,addsub";
+    return orderSteps.join(",") === requiredOrder.join(",");
   }
 
   function checkAnswer() {
@@ -404,7 +488,7 @@ export default function RegnehierarkietPage() {
     if (revealed) {
       setFeedback({
         type: "info",
-        message: "Facit er vist. Lav en ny opgave for at fortsÃ¦tte.",
+        message: "Facit er vist. Lav en ny opgave for at fortsætte.",
       });
       emitLiveEvent({
         type: "result",
@@ -416,16 +500,16 @@ export default function RegnehierarkietPage() {
       return;
     }
 
-    if (orderSteps.length < 4) {
+    if (orderSteps.length < requiredOrder.length) {
       setFeedback({
         type: "error",
-        message: "Klik pÃ¥ rÃ¦kkefÃ¸lgen (1-4), fÃ¸r du tjekker.",
+        message: `Klik på rækkefølgen (1-${requiredOrder.length}), før du tjekker.`,
       });
       return;
     }
 
     if (!isOrderCorrect()) {
-      setFeedback({ type: "wrong", message: "RÃ¦kkefÃ¸lgen er ikke korrekt." });
+      setFeedback({ type: "wrong", message: "Rækkefølgen er ikke korrekt." });
       setStreak(0);
       emitLiveEvent({
         type: "result",
@@ -447,7 +531,7 @@ export default function RegnehierarkietPage() {
     }
 
     if (value !== task.result) {
-      setFeedback({ type: "wrong", message: "Ikke helt. PrÃ¸v igen." });
+      setFeedback({ type: "wrong", message: "Ikke helt. Prøv igen." });
       setStreak(0);
       emitLiveEvent({
         type: "result",
@@ -487,7 +571,7 @@ export default function RegnehierarkietPage() {
     setRevealed(true);
     setFeedback({
       type: "info",
-      message: `RÃ¦kkefÃ¸lge: ()=1, potenser/\u221a=2, x/\u00f7=3, + og -=4. Facit: ${task.result}.`,
+      message: `Rækkefølge: ${orderHint}. Facit: ${task.result}.`,
     });
     setStreak(0);
   }
@@ -533,7 +617,7 @@ export default function RegnehierarkietPage() {
                 Forbinder
               </p>
               <h1 className="text-4xl font-[var(--font-display)] text-slate-900 md:text-5xl">
-                Klar om et Ã¸jeblik
+                Klar om et øjeblik
               </h1>
               <p className="max-w-2xl text-base text-slate-600">
                 Vi forbinder til din session.
@@ -568,7 +652,7 @@ export default function RegnehierarkietPage() {
               Regnehierarkiet
             </h1>
             <p className="max-w-xl text-base text-slate-600">
-              Find rÃ¦kkefÃ¸lgen og regn regnestykket korrekt.
+              Find rækkefølgen og regn regnestykket korrekt.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -609,7 +693,7 @@ export default function RegnehierarkietPage() {
                     />
                   </div>
                   <div className="mt-1 text-[11px] text-slate-500">
-                    {toNext} til nÃ¦ste level
+                    {toNext} til næste level
                   </div>
                 </div>
               </div>
@@ -657,7 +741,7 @@ export default function RegnehierarkietPage() {
                 </div>
 
                 <div className="rounded-2xl border border-dashed border-black/10 bg-white/70 px-4 py-4 text-center text-sm text-slate-600">
-                  Klik pÃ¥ den rigtige fÃ¦kkefÃ¸lge og skriv resultatet.
+                  Klik på den rigtige rækkefølge og skriv resultatet.
                 </div>
 
                 <div className="flex flex-col items-center gap-2">
@@ -719,7 +803,7 @@ export default function RegnehierarkietPage() {
                   </div>
                 )}
                 <p className="text-sm text-slate-500">
-                  Tip: Start med parenteser, sÃ¥ gange/division, sÃ¥ plus og minus.
+                  Tip: Start med parenteser, så potenser/kvadratrod, så gange/division, så plus og minus.
                 </p>
               </div>
             </div>
@@ -771,27 +855,26 @@ export default function RegnehierarkietPage() {
                 <div className="mt-6 grid gap-5">
                   <div>
                     <label className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                      SvÃ¦rhedsgrad
+                      Level
                     </label>
                     <select
                       className={selectClass}
-                      value={settings.difficulty}
+                      value={String(settings.level)}
                       onChange={(e) =>
-                        updateSetting(
-                          "difficulty",
-                          e.target.value as Difficulty
-                        )
+                        updateSetting("level", clampLevel(Number(e.target.value)))
                       }
                     >
-                      <option value="easy">Let</option>
-                      <option value="medium">Mellem</option>
-                      <option value="hard">SvÃ¦r</option>
+                      <option value="1">Level 1</option>
+                      <option value="2">Level 2</option>
+                      <option value="3">Level 3</option>
+                      <option value="4">Level 4</option>
+                      <option value="5">Level 5</option>
                     </select>
                   </div>
                 </div>
               ) : (
                 <div className="mt-6 rounded-2xl border border-dashed border-black/10 bg-white/70 px-4 py-4 text-sm text-slate-600">
-                  Indstillingerne er skjult. Tryk pÃ¥ tandhjulet for at Ã¥bne dem
+                  Indstillingerne er skjult. Tryk på tandhjulet for at åbne dem
                   igen.
                 </div>
               )}
