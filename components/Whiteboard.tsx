@@ -153,10 +153,11 @@ export default function Whiteboard({
       canvas.addEventListener("gestureend", onGestureStart as EventListener);
     }
 
-    const onWheelCapture = (event: WheelEvent) => {
-      if (!container.contains(event.target as Node)) return;
-      event.preventDefault();
-      event.stopPropagation();
+    const onWheelCapture: EventListener = (event) => {
+      const wheelEvent = event as WheelEvent;
+      if (!container.contains(wheelEvent.target as Node)) return;
+      wheelEvent.preventDefault();
+      wheelEvent.stopPropagation();
     };
 
     const win = window as unknown as {
